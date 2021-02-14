@@ -1,1 +1,1 @@
-# golang-blockchain
+# Digicoin
