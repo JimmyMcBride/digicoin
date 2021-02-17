@@ -3,7 +3,8 @@ package blockchain
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
+
+	"github.com/JimmyMcBride/digicoin/utils"
 )
 
 // Block is the struct for each block in the blockchain.
@@ -14,7 +15,7 @@ type Block struct {
 	Nonce    int
 }
 
-// CreateBlock ...
+// CreateBlock creates a new block in the blockchain.
 func CreateBlock(data string, prevHash []byte) *Block {
 	block := &Block{[]byte{}, []byte(data), prevHash, 0}
 	pow := NewProof(block)
@@ -26,33 +27,31 @@ func CreateBlock(data string, prevHash []byte) *Block {
 	return block
 }
 
-// Genesis ...
+// Genesis creates the blockchains first block.
 func Genesis() *Block {
 	return CreateBlock("Genesis", []byte{})
 }
 
-// Serialize ...
+// Serialize encodes a block.
 func (b *Block) Serialize() []byte {
 	var res bytes.Buffer
 	encoder := gob.NewEncoder(&res)
 
 	err := encoder.Encode(b)
-	if err != nil {
-		log.Panic(err)
-	}
+
+	utils.HandleErr(err)
 
 	return res.Bytes()
 }
 
-// Deserialize ...
-func (b *Block) Deserialize(data []byte) *Block {
+// Deserialize takes in encoded data and returns an un-encoded block.
+func Deserialize(data []byte) *Block {
 	var block Block
 	decoder := gob.NewDecoder(bytes.NewReader(data))
 
-	err := decoder.Decode(b)
-	if err != nil {
-		log.Panic(err)
-	}
+	err := decoder.Decode(&block)
+
+	utils.HandleErr(err)
 
 	return &block
 }

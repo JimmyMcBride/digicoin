@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	dbPath = "./tmp/blocks"
+	dbPath = "/tmp/blocks"
 )
 
 // Blockchain is a list of blocks in the blockchain.
@@ -17,17 +17,17 @@ type Blockchain struct {
 	Database *badger.DB
 }
 
-// BlockchainIterator is struct for the current iteration of the blockchain.
-type BlockchainIterator struct {
+// Iterator is struct for the current iteration of the blockchain.
+type Iterator struct {
 	CurrentHash []byte
 	Database    *badger.DB
 }
 
-// InitBlockchain ...
+// InitBlockchain initializes the blockchain.
 func InitBlockchain() *Blockchain {
 	var lastHash []byte
 
-	db, err := badger.Open(badger.DefaultOptions("./tmp/blocks"))
+	db, err := badger.Open(badger.DefaultOptions("/tmp/blocks"))
 	utils.HandleErr(err)
 
 	err = db.Update(func(txn *badger.Txn) error {
@@ -57,7 +57,7 @@ func InitBlockchain() *Blockchain {
 	return &blockchain
 }
 
-// AddBlock ...
+// AddBlock adds a block to the blockchain.
 func (chain *Blockchain) AddBlock(data string) {
 	var lastHash []byte
 
@@ -88,25 +88,26 @@ func (chain *Blockchain) AddBlock(data string) {
 }
 
 // Iterator converts a blockchain to a blockchain iterator.
-func (chain *Blockchain) Iterator() *BlockchainIterator {
-	iter := &BlockchainIterator{chain.LastHash, chain.Database}
+func (chain *Blockchain) Iterator() *Iterator {
+	iter := &Iterator{chain.LastHash, chain.Database}
 
 	return iter
 }
 
-// Next ...
-func (iter *BlockchainIterator) Next() *Block {
+// Next gives you the "next" block, working backwards through the blockchain.
+func (iter *Iterator) Next() *Block {
 	var block *Block
 
 	err := iter.Database.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(iter.CurrentHash)
 		utils.HandleErr(err)
+
 		var encodedBlock []byte
 		err = item.Value(func(val []byte) error {
 			encodedBlock = append([]byte{}, val...)
 			return nil
 		})
-		block.Deserialize(encodedBlock)
+		block = Deserialize(encodedBlock)
 
 		return err
 	})

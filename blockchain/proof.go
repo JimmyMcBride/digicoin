@@ -5,15 +5,16 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"math"
 	"math/big"
+
+	"github.com/JimmyMcBride/digicoin/utils"
 )
 
 // Difficulty is a number. The hire the number, the harder the difficulty.
 const Difficulty = 12
 
-// ProofOfWork ...
+// ProofOfWork is the struct fot our proof of work algorithm.
 type ProofOfWork struct {
 	Block  *Block
 	Target *big.Int
@@ -43,7 +44,7 @@ func (pow *ProofOfWork) InitData(nonce int) []byte {
 	return data
 }
 
-// Run ...
+// Run initiates the proof of work algorithm.
 func (pow *ProofOfWork) Run() (int, []byte) {
 	var intHash big.Int
 	var hash [32]byte
@@ -68,7 +69,7 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 	return nonce, hash[:]
 }
 
-// Validate ...
+// Validate makes sure the proof of work is valid.
 func (pow *ProofOfWork) Validate() bool {
 	var intHash big.Int
 
@@ -80,13 +81,12 @@ func (pow *ProofOfWork) Validate() bool {
 	return intHash.Cmp(pow.Target) == -1
 }
 
-// ToHex ...
+// ToHex converts a number to base 10 binary.
 func ToHex(num int64) []byte {
 	buff := new(bytes.Buffer)
 	err := binary.Write(buff, binary.BigEndian, num)
-	if err != nil {
-		log.Panic(err)
-	}
+
+	utils.HandleErr(err)
 
 	return buff.Bytes()
 }

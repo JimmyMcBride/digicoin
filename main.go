@@ -11,29 +11,29 @@ import (
 	"github.com/JimmyMcBride/digicoin/utils"
 )
 
-type CommandLine struct {
+type commandLine struct {
 	blockchain *blockchain.Blockchain
 }
 
-func (cli *CommandLine) log() {
+func (cli *commandLine) printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println(" add -block BLOCK_DATA - add a block to the chain")
-	fmt.Println(" log - Logs the blocks in the chain")
+	fmt.Println(" print - Prints the blocks in the chain")
 }
 
-func (cli *CommandLine) validateArgs() {
-	if len(os.Args) > 2 {
-		cli.log()
+func (cli *commandLine) validateArgs() {
+	if len(os.Args) < 2 {
+		cli.printUsage()
 		runtime.Goexit()
 	}
 }
 
-func (cli *CommandLine) addBlock(data string) {
+func (cli *commandLine) addBlock(data string) {
 	cli.blockchain.AddBlock(data)
 	fmt.Println("Added the block to the chain!")
 }
 
-func (cli *CommandLine) logChain() {
+func (cli *commandLine) printChain() {
 	iter := cli.blockchain.Iterator()
 
 	for {
@@ -46,10 +46,14 @@ func (cli *CommandLine) logChain() {
 		pow := blockchain.NewProof(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
 		fmt.Println()
+
+		if len(block.PrevHash) == 0 {
+			break
+		}
 	}
 }
 
-func (cli *CommandLine) run() {
+func (cli *commandLine) run() {
 	cli.validateArgs()
 
 	addBlockCmd := flag.NewFlagSet("add", flag.ExitOnError)
@@ -64,7 +68,7 @@ func (cli *CommandLine) run() {
 		err := printChainCmd.Parse(os.Args[2:])
 		utils.HandleErr(err)
 	default:
-		cli.log()
+		cli.printUsage()
 		runtime.Goexit()
 	}
 
@@ -77,7 +81,7 @@ func (cli *CommandLine) run() {
 	}
 
 	if printChainCmd.Parsed() {
-		cli.logChain()
+		cli.printChain()
 	}
 }
 
@@ -86,6 +90,6 @@ func main() {
 	chain := blockchain.InitBlockchain()
 	defer chain.Database.Close()
 
-	cli := CommandLine{chain}
+	cli := commandLine{chain}
 	cli.run()
 }
